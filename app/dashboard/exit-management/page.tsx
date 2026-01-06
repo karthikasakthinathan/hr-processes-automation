@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import Link from "next/link";
-import {
+import{ 
   FiGrid,
   FiUsers,
   FiUserPlus,
