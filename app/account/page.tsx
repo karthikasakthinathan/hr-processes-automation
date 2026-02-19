@@ -1,11 +1,65 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "@/firebase";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+
+const db = getFirestore();
 
 export default function CreateAccountPage() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [companyCode, setCompanyCode] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!fullName || !email || !password || !companyCode) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Create user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+
+      // Update display name
+      await updateProfile(user, {
+        displayName: fullName,
+      });
+
+      // Save extra data to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        fullName,
+        email,
+        companyCode,
+        createdAt: new Date(),
+      });
+
+      alert("Account created successfully ✅");
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#EDE7F6] to-[#DCCBFA] px-4">
       <div className="w-[900px] h-[520px] bg-white rounded-2xl shadow-xl flex overflow-hidden">
 
-        {/* LEFT – IMAGE (50%) */}
+        {/* LEFT – IMAGE */}
         <div className="w-[50%] relative">
           <img
             src="/image.png"
@@ -14,95 +68,58 @@ export default function CreateAccountPage() {
           />
         </div>
 
-        {/* RIGHT – FORM (50%) */}
+        {/* RIGHT – FORM */}
         <div className="w-[50%] px-7 py-7 flex flex-col justify-center">
 
           <h1 className="text-xl font-semibold text-gray-800">
             Create Account
           </h1>
-          <p className="text-[13px] text-gray-500 mt-1 mb-3">
-            Sign up to create your account
-          </p>
 
-          {/* Full Name */}
-          <div className="mb-2.5">
-            <label className="text-[11px] text-gray-600">Full Name</label>
-            <input
-              type="text"
-              placeholder="Full Name"
-              className="w-full mt-1 px-3 py-[7px] rounded-lg bg-gray-100 text-[13px]
-              outline-none focus:ring-1 focus:ring-purple-400"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+          />
 
-          {/* Email */}
-          <div className="mb-2.5">
-            <label className="text-[11px] text-gray-600">Email</label>
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full mt-1 px-3 py-[7px] rounded-lg bg-gray-100 text-[13px]
-              outline-none focus:ring-1 focus:ring-purple-400"
-            />
-          </div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+          />
 
-          {/* Password */}
-          <div className="mb-2.5">
-            <label className="text-[11px] text-gray-600">Create Password</label>
-            <div className="relative">
-              <input
-                type="password"
-                placeholder="Create Password"
-                className="w-full mt-1 px-3 py-[7px] rounded-lg bg-gray-100 text-[13px]
-                outline-none focus:ring-1 focus:ring-purple-400"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs cursor-pointer">
-                👁
-              </span>
-            </div>
-          </div>
+          <input
+            type="password"
+            placeholder="Create Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+          />
 
-          {/* Role */}
-          <div className="mb-2.5">
-            <label className="text-[11px] text-gray-600">Role</label>
-            <select
-              className="w-full mt-1 px-3 py-[7px] rounded-lg bg-gray-100 text-[13px]
-              outline-none focus:ring-1 focus:ring-purple-400"
-            >
-              <option>Select Role</option>
-              <option>Employee</option>
-            </select>
-          </div>
+          <input
+            type="text"
+            placeholder="Company Code"
+            value={companyCode}
+            onChange={(e) => setCompanyCode(e.target.value)}
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+          />
 
-          {/* Company Code */}
-          <div className="mb-3">
-            <label className="text-[11px] text-gray-600">
-              Company Code / Organization ID
-            </label>
-            <input
-              type="text"
-              placeholder="Company Code"
-              className="w-full mt-1 px-3 py-[7px] rounded-lg bg-gray-100 text-[13px]
-              outline-none focus:ring-1 focus:ring-purple-400"
-            />
-          </div>
-
-          {/* Sign Up Button */}
           <button
-            className="w-full py-2 rounded-lg text-[13px] text-white font-medium
+            onClick={handleSignup}
+            disabled={loading}
+            className="w-full mt-4 py-2 rounded-lg text-white font-medium
             bg-gradient-to-r from-[#7F3FBF] via-[#9B6BD6] to-[#F2A7D8]
-            hover:opacity-90 transition"
+            hover:opacity-90 transition disabled:opacity-50"
           >
-            Sign Up
+            {loading ? "Creating..." : "Sign Up"}
           </button>
 
-          {/* Footer */}
-          <p className="text-[11px] text-gray-500 text-center mt-2.5">
+          <p className="text-xs text-center mt-3">
             Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-purple-600 hover:underline cursor-pointer"
-            >
+            <Link href="/login" className="text-purple-600 hover:underline">
               Sign in
             </Link>
           </p>
