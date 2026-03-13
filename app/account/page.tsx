@@ -2,61 +2,92 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const db = getFirestore();
 
 export default function CreateAccountPage() {
+
+  const router = useRouter();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [companyCode, setCompanyCode] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSignup = async () => {
+
+    setErrorMsg("");
+    setSuccess(false);
+
     if (!fullName || !email || !password || !companyCode) {
-      alert("Please fill all fields");
+      setErrorMsg("Please fill all fields");
       return;
     }
 
     try {
+
       setLoading(true);
 
-      // Create user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      const user = userCredential.user;
+      // ⭐ SUCCESS UI IMMEDIATELY
+      setSuccess(true);
+      setLoading(false);
 
-      // Update display name
-      await updateProfile(user, {
-        displayName: fullName,
-      });
+      // ⭐ REDIRECT AFTER 1.5s
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
 
-      // Save extra data to Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      // ⭐ FORM RESET
+      setFullName("");
+      setEmail("");
+      setPassword("");
+      setCompanyCode("");
+
+      // ⭐ FIRESTORE SAVE BACKGROUND
+      setDoc(doc(db, "users", userCredential.user.uid), {
         fullName,
         email,
         companyCode,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
       });
 
-      alert("Account created successfully ✅");
     } catch (error: any) {
-      console.error(error);
-      alert(error.message);
-    } finally {
+
       setLoading(false);
+
+      if (error.code === "auth/email-already-in-use") {
+        setErrorMsg("Email already exists");
+      }
+      else if (error.code === "auth/weak-password") {
+        setErrorMsg("Password must be 6 characters");
+      }
+      else if (error.code === "auth/invalid-email") {
+        setErrorMsg("Invalid Email");
+      }
+      else {
+        setErrorMsg("Signup failed");
+      }
+
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#EDE7F6] to-[#DCCBFA] px-4">
+
       <div className="w-[900px] h-[520px] bg-white rounded-2xl shadow-xl flex overflow-hidden">
 
         {/* LEFT – IMAGE */}
@@ -80,7 +111,7 @@ export default function CreateAccountPage() {
             placeholder="Full Name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm outline-none"
           />
 
           <input
@@ -88,7 +119,7 @@ export default function CreateAccountPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm outline-none"
           />
 
           <input
@@ -96,7 +127,7 @@ export default function CreateAccountPage() {
             placeholder="Create Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm outline-none"
           />
 
           <input
@@ -104,8 +135,22 @@ export default function CreateAccountPage() {
             placeholder="Company Code"
             value={companyCode}
             onChange={(e) => setCompanyCode(e.target.value)}
-            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm"
+            className="w-full mt-3 px-3 py-2 rounded-lg bg-gray-100 text-sm outline-none"
           />
+
+          {/* SUCCESS MESSAGE */}
+          {success && (
+            <div className="mt-3 p-2 bg-green-100 border border-green-400 text-green-700 text-xs rounded-lg text-center font-medium">
+              ✅ Account Created Successfully
+            </div>
+          )}
+
+          {/* ERROR MESSAGE */}
+          {errorMsg && (
+            <div className="mt-3 p-2 bg-red-100 border border-red-400 text-red-700 text-xs rounded-lg text-center font-medium">
+              ❌ {errorMsg}
+            </div>
+          )}
 
           <button
             onClick={handleSignup}

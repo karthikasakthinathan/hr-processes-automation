@@ -51,42 +51,13 @@ export default function OnboardingPage() {
           <div className="px-6 py-6 text-lg font-semibold">Dashboard</div>
 
           <nav className="flex-1 px-4 space-y-2 text-[13px]">
-            <MenuItem
-              icon={<FiGrid />}
-              label="Dashboard"
-              href="/dashboard"
-            />
-            <MenuItem
-              icon={<FiUsers />}
-              label="Recruitment"
-              href="/dashboard/recruitment"
-            />
-            <MenuItem
-              icon={<FiUserPlus />}
-              label="Onboarding"
-              href="/dashboard/onboarding"
-              active
-            />
-            <MenuItem
-              icon={<FiCalendar />}
-              label="Attendance & Leave"
-              href="/dashboard/attendance"
-            />
-            <MenuItem
-              icon={<FiDollarSign />}
-              label="Payroll"
-              href="/dashboard/payroll"
-            />
-            <MenuItem
-              icon={<FiHelpCircle />}
-              label="HR Tickets"
-              href="/dashboard/hr-tickets"
-            />
-            <MenuItem
-              icon={<FiLogOut />}
-              label="Exit Management"
-              href="/dashboard/exit-management"
-            />
+            <MenuItem icon={<FiGrid />} label="Dashboard" href="/dashboard" />
+            <MenuItem icon={<FiUsers />} label="Recruitment" href="/dashboard/recruitment" />
+            <MenuItem icon={<FiUserPlus />} label="Onboarding" href="/dashboard/onboarding" active />
+            <MenuItem icon={<FiCalendar />} label="Attendance & Leave" href="/dashboard/attendance" />
+            <MenuItem icon={<FiDollarSign />} label="Payroll" href="/dashboard/payroll" />
+            <MenuItem icon={<FiHelpCircle />} label="HR Tickets" href="/dashboard/hr-tickets" />
+            <MenuItem icon={<FiLogOut />} label="Exit Management" href="/dashboard/exit-management" />
           </nav>
 
           <div className="px-5 py-4 flex items-center gap-3 bg-white/10 mt-4">
@@ -103,16 +74,14 @@ export default function OnboardingPage() {
 
           {/* HEADER */}
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-xl font-semibold text-gray-700">
-              Onboarding
-            </h1>
+            <h1 className="text-xl font-semibold text-gray-700">Onboarding</h1>
             <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow">
               <div className="w-8 h-8 rounded-full bg-gray-300" />
               <span className="text-sm text-gray-600">Rahul Dewy</span>
             </div>
           </div>
 
-          {/* FORM CARD */}
+          {/* MANUAL FORM CARD */}
           <div className="bg-white rounded-2xl shadow p-6 mb-6">
             <div className="grid grid-cols-2 gap-4">
               <Input label="Employee Name" placeholder="Enter employee name" />
@@ -122,29 +91,35 @@ export default function OnboardingPage() {
             </div>
 
             <div className="mt-4">
-              <label className="text-sm text-gray-600">
-                Document Upload
-              </label>
+              <label className="text-sm text-gray-600">Document Upload</label>
               <div className="flex items-center gap-4 mt-2">
-                <button className="px-4 py-2 bg-[#6f63d9] text-white rounded-lg text-sm">
-                  Upload File
-                </button>
-                <span className="text-sm text-gray-400">
-                  No file selected
-                </span>
-                <button className="ml-auto px-6 py-2 bg-[#6f63d9] text-white rounded-lg text-sm">
-                  Submit
-                </button>
+                <button className="px-4 py-2 bg-[#6f63d9] text-white rounded-lg text-sm">Upload File</button>
+                <span className="text-sm text-gray-400">No file selected</span>
+                <button className="ml-auto px-6 py-2 bg-[#6f63d9] text-white rounded-lg text-sm">Submit</button>
               </div>
+            </div>
+          </div>
+
+          {/* BULK UPLOAD SECTION (NEW ADDITION) */}
+          <div className="bg-white rounded-2xl shadow p-6 mb-6">
+            <h2 className="text-sm font-medium text-gray-600 mb-3">Bulk Upload Employees</h2>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 flex items-center border rounded-xl overflow-hidden bg-gray-100">
+                <button className="px-4 py-2 bg-white border-r text-sm text-gray-700 hover:bg-gray-50 transition">
+                  Choose Excel
+                </button>
+                <span className="px-4 text-sm text-gray-400">Select an Excel file</span>
+              </div>
+              <button className="px-6 py-2 bg-[#6f63d9] text-white rounded-lg text-sm font-medium">
+                Bulk Onboarding Submit
+              </button>
             </div>
           </div>
 
           {/* TABLE */}
           <div className="bg-white rounded-2xl shadow p-6">
             <div className="flex justify-between mb-4">
-              <h2 className="font-medium text-gray-700">
-                New Hires List
-              </h2>
+              <h2 className="font-medium text-gray-700">New Hires List</h2>
               <input
                 placeholder="Search"
                 className="border rounded-lg px-3 py-1.5 text-sm outline-none"
@@ -167,7 +142,7 @@ export default function OnboardingPage() {
                   ["John Smith", "Software Engineer", "17 Apr, 2024", "Missing Docs"],
                   ["Jessica Brown", "Digital Marketer", "17 Apr, 2024", "Rejected"],
                 ].map(([name, role, date, status]) => (
-                  <tr key={name} className="border-b last:border-none">
+                  <tr key={name} className="border-b last:border-none hover:bg-gray-50/50 transition">
                     <td className="py-3">{name}</td>
                     <td>{role}</td>
                     <td>{date}</td>
@@ -198,13 +173,7 @@ export default function OnboardingPage() {
 }
 
 /* ===== INPUT COMPONENT ===== */
-function Input({
-  label,
-  placeholder,
-}: {
-  label: string;
-  placeholder: string;
-}) {
+function Input({ label, placeholder }: { label: string; placeholder: string }) {
   return (
     <div>
       <label className="text-sm text-gray-600">{label}</label>
