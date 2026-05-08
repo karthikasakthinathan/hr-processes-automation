@@ -1,186 +1,288 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  FiGrid,
-  FiUsers,
-  FiUserPlus,
-  FiCalendar,
-  FiDollarSign,
-  FiHelpCircle,
-  FiLogOut,
+FiGrid,
+FiUsers,
+FiUserPlus,
+FiCalendar,
+FiDollarSign,
+FiHelpCircle,
+FiLogOut,
 } from "react-icons/fi";
 
-/* ===== MENU ITEM COMPONENT ===== */
+/* ===== MENU ITEM ===== */
 function MenuItem({
-  icon,
-  label,
-  href,
-  active = false,
+icon,
+label,
+href,
+active = false,
 }: {
-  icon: ReactNode;
-  label: string;
-  href: string;
-  active?: boolean;
+icon: ReactNode;
+label: string;
+href: string;
+active?: boolean;
 }) {
-  return (
-    <Link href={href}>
-      <div
-        className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition
-          ${
-            active
-              ? "bg-white/20 text-white"
-              : "text-white/80 hover:bg-white/10"
-          }`}
-      >
-        <span className="text-base">{icon}</span>
-        <span>{label}</span>
-      </div>
-    </Link>
-  );
+return ( <Link href={href}>
+<div
+className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
+          active
+            ? "bg-white/20 text-white"
+            : "text-white/80 hover:bg-white/10"
+        }`}
+> <span>{icon}</span> <span>{label}</span> </div> </Link>
+);
 }
 
 export default function OnboardingPage() {
-  return (
-    <div className="min-h-screen bg-[#f4f1fb] flex items-center justify-center p-6">
-      <div className="w-[1200px] h-[650px] rounded-2xl overflow-hidden shadow-2xl bg-white/40 backdrop-blur-xl border border-white/50 flex">
+const [empId, setEmpId] = useState("");
+const [empName, setEmpName] = useState("");
+const [jobTitle, setJobTitle] = useState("");
+const [email, setEmail] = useState("");
+const [location, setLocation] = useState("");
 
-        {/* ===== SIDEBAR ===== */}
-        <aside className="w-[250px] bg-gradient-to-b from-[#7F3FBF] to-[#6F63D9] text-white flex flex-col">
-          <div className="px-6 py-6 text-lg font-semibold">Dashboard</div>
+const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const [fileName, setFileName] = useState("No file selected");
 
-          <nav className="flex-1 px-4 space-y-2 text-[13px]">
-            <MenuItem icon={<FiGrid />} label="Dashboard" href="/dashboard" />
-            <MenuItem icon={<FiUsers />} label="Recruitment" href="/dashboard/recruitment" />
-            <MenuItem icon={<FiUserPlus />} label="Onboarding" href="/dashboard/onboarding" active />
-            <MenuItem icon={<FiCalendar />} label="Attendance & Leave" href="/dashboard/attendance" />
-            <MenuItem icon={<FiDollarSign />} label="Payroll" href="/dashboard/payroll" />
-            <MenuItem icon={<FiHelpCircle />} label="HR Tickets" href="/dashboard/hr-tickets" />
-            <MenuItem icon={<FiLogOut />} label="Exit Management" href="/dashboard/exit-management" />
-          </nav>
+const [hiresList, setHiresList] = useState<any[]>([]);
 
-          <div className="px-5 py-4 flex items-center gap-3 bg-white/10 mt-4">
-            <div className="w-9 h-9 rounded-full bg-white/30" />
-            <div className="text-xs">
-              <p className="font-medium">Rahul Dewy</p>
-              <p className="opacity-70">HR Manager</p>
-            </div>
-          </div>
-        </aside>
+/* LOAD LIST */
+const loadOnboarding = async () => {
+const token = localStorage.getItem("token");
 
-        {/* ===== MAIN CONTENT ===== */}
-        <main className="flex-1 p-8 overflow-y-auto bg-gradient-to-br from-[#EDE7F6] to-[#DCCBFA]">
 
-          {/* HEADER */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-xl font-semibold text-gray-700">Onboarding</h1>
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow">
-              <div className="w-8 h-8 rounded-full bg-gray-300" />
-              <span className="text-sm text-gray-600">Rahul Dewy</span>
-            </div>
-          </div>
+const res = await fetch(
+  "http://localhost:8000/onboarding/get-onboarding-list",
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
 
-          {/* MANUAL FORM CARD */}
-          <div className="bg-white rounded-2xl shadow p-6 mb-6">
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Employee Name" placeholder="Enter employee name" />
-              <Input label="Job Title" placeholder="Enter job title" />
-              <Input label="Email Address" placeholder="Enter email" />
-              <Input label="Location" placeholder="Enter location" />
-            </div>
+const data = await res.json();
+setHiresList(data.data || []);
 
-            <div className="mt-4">
-              <label className="text-sm text-gray-600">Document Upload</label>
-              <div className="flex items-center gap-4 mt-2">
-                <button className="px-4 py-2 bg-[#6f63d9] text-white rounded-lg text-sm">Upload File</button>
-                <span className="text-sm text-gray-400">No file selected</span>
-                <button className="ml-auto px-6 py-2 bg-[#6f63d9] text-white rounded-lg text-sm">Submit</button>
-              </div>
-            </div>
-          </div>
 
-          {/* BULK UPLOAD SECTION (NEW ADDITION) */}
-          <div className="bg-white rounded-2xl shadow p-6 mb-6">
-            <h2 className="text-sm font-medium text-gray-600 mb-3">Bulk Upload Employees</h2>
-            <div className="flex items-center gap-4">
-              <div className="flex-1 flex items-center border rounded-xl overflow-hidden bg-gray-100">
-                <button className="px-4 py-2 bg-white border-r text-sm text-gray-700 hover:bg-gray-50 transition">
-                  Choose Excel
-                </button>
-                <span className="px-4 text-sm text-gray-400">Select an Excel file</span>
-              </div>
-              <button className="px-6 py-2 bg-[#6f63d9] text-white rounded-lg text-sm font-medium">
-                Bulk Onboarding Submit
-              </button>
-            </div>
-          </div>
+};
 
-          {/* TABLE */}
-          <div className="bg-white rounded-2xl shadow p-6">
-            <div className="flex justify-between mb-4">
-              <h2 className="font-medium text-gray-700">New Hires List</h2>
-              <input
-                placeholder="Search"
-                className="border rounded-lg px-3 py-1.5 text-sm outline-none"
-              />
-            </div>
+useEffect(() => {
+loadOnboarding();
+}, []);
 
-            <table className="w-full text-sm">
-              <thead className="text-gray-500 border-b">
-                <tr>
-                  <th className="text-left py-2">Name</th>
-                  <th className="text-left">Role</th>
-                  <th className="text-left">Joining Date</th>
-                  <th className="text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-600">
-                {[
-                  ["Emma Davis", "UI/UX Designer", "25 Apr, 2024", "Shortlisted"],
-                  ["James Wilson", "Sales Executive", "20 Apr, 2024", "Completed"],
-                  ["John Smith", "Software Engineer", "17 Apr, 2024", "Missing Docs"],
-                  ["Jessica Brown", "Digital Marketer", "17 Apr, 2024", "Rejected"],
-                ].map(([name, role, date, status]) => (
-                  <tr key={name} className="border-b last:border-none hover:bg-gray-50/50 transition">
-                    <td className="py-3">{name}</td>
-                    <td>{role}</td>
-                    <td>{date}</td>
-                    <td>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs ${
-                          status === "Completed"
-                            ? "bg-green-100 text-green-600"
-                            : status === "Shortlisted"
-                            ? "bg-blue-100 text-blue-600"
-                            : status === "Rejected"
-                            ? "bg-red-100 text-red-600"
-                            : "bg-yellow-100 text-yellow-600"
-                        }`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </main>
+/* CREATE EMPLOYEE */
+const createEmployee = async () => {
+const token = localStorage.getItem("token");
+
+
+const res = await fetch(
+  "http://localhost:8000/onboarding/add-employee",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name: empName,
+      job_title: jobTitle,
+      email: email,
+      location: location,
+    }),
+  }
+);
+
+const data = await res.json();
+alert(data.message || data.error);
+loadOnboarding();
+
+
+};
+
+/* BULK UPLOAD */
+const bulkUpload = async () => {
+  if (!selectedFile) {
+    alert("Please choose an Excel file first!");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("file", selectedFile);
+
+  try {
+    const res = await fetch("http://localhost:8000/onboarding/bulk-upload", {  // ✅ correct endpoint
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // ✅ Show full result summary
+      alert(
+        `✅ Upload Successful!\n\n` +
+        `Total Inserted: ${data.total_inserted}\n` +
+        `Total Skipped: ${data.total_skipped}\n` +
+        `Sheets Processed: ${data.sheets_processed}\n\n` +
+        `${data.message}`
+      );
+    } else {
+      alert("❌ Upload Failed: " + (data.detail || data.message || "Unknown error"));
+    }
+
+  } catch (error) {
+    alert("❌ Network Error: Could not reach the server.");
+    console.error(error);
+  }
+
+  setSelectedFile(null);
+  setFileName("No file selected");
+  loadOnboarding();
+};
+
+return ( <div className="min-h-screen bg-[#f4f1fb] flex items-center justify-center p-6"> <div className="w-[1200px] h-[650px] rounded-2xl overflow-hidden shadow-2xl bg-white/40 backdrop-blur-xl border border-white/50 flex">
+
+
+    {/* SIDEBAR */}
+    <aside className="w-[250px] bg-gradient-to-b from-[#7F3FBF] to-[#6F63D9] text-white flex flex-col">
+      <div className="px-6 py-6 text-lg font-semibold">Dashboard</div>
+
+      <nav className="flex-1 px-4 space-y-2 text-[13px]">
+        <MenuItem icon={<FiGrid />} label="Dashboard" href="/dashboard" />
+        <MenuItem icon={<FiUsers />} label="Recruitment" href="/dashboard/recruitment" />
+        <MenuItem icon={<FiUserPlus />} label="Onboarding" href="/dashboard/onboarding" active />
+        <MenuItem icon={<FiCalendar />} label="Attendance & Leave" href="/dashboard/attendance" />
+        <MenuItem icon={<FiDollarSign />} label="Payroll" href="/dashboard/payroll" />
+        <MenuItem icon={<FiHelpCircle />} label="HR Tickets" href="/dashboard/hr-tickets" />
+        <MenuItem icon={<FiLogOut />} label="Exit Management" href="/dashboard/exit-management" />
+      </nav>
+    </aside>
+
+    {/* MAIN */}
+    <main className="flex-1 p-8 overflow-y-auto bg-gradient-to-br from-[#EDE7F6] to-[#DCCBFA]">
+
+      {/* HEADER */}
+      <h1 className="text-xl font-semibold text-gray-700 mb-6">
+        Onboarding
+      </h1>
+
+      {/* MANUAL FORM */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Employee Id" value={empId} onChange={setEmpId}/>
+          <Input label="Employee Name" value={empName} onChange={setEmpName}/>
+          <Input label="Job Title" value={jobTitle} onChange={setJobTitle}/>
+          <Input label="Email Address" value={email} onChange={setEmail}/>
+          
+
+        <div className="col-span-1">
+    <Input label="Location" value={location} onChange={setLocation} />
+  </div>
+
+  <div className="flex items-end">
+    <button
+      onClick={createEmployee}
+      className="px-6 py-2 bg-[#6f63d9] text-white rounded-lg"
+    >
+      Submit
+    </button>
+  </div>
+
+</div>
       </div>
-    </div>
-  );
+
+      {/* BULK EXCEL */}
+      <div className="bg-white rounded-2xl shadow p-6 mb-6">
+        <h2 className="text-sm font-medium text-gray-600 mb-3">
+          Bulk Upload Employees
+        </h2>
+
+        <div className="flex items-center gap-4">
+          <label className="text-sm text-purple-600 font-medium cursor-pointer">
+            Choose Excel
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setSelectedFile(f);
+                setFileName(f ? f.name : "No file selected");
+              }}
+            />
+          </label>
+
+          <span className="text-sm text-gray-500">{fileName}</span>
+
+          <button
+            onClick={bulkUpload}
+            className="ml-auto px-6 py-2 bg-[#6f63d9] text-white rounded-lg"
+          >
+            Bulk Onboarding Submit
+          </button>
+        </div>
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white rounded-2xl shadow p-6">
+        <h2 className="font-medium mb-4">New Hires List</h2>
+
+        <table className="w-full text-sm">
+          <thead className="text-left bg-[#F2ECFB] text-sm text-gray-600 px-4 py-2">
+            <tr>
+              <th className="py-2 px-3">Emp ID</th>
+              <th className="py-2 px-3">Joining Date</th>
+              <th className="py-2 px-3">Status</th>
+              <th className="py-2 px-3">Training</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {hiresList.map((h, i) => (
+              <tr key={i} >
+                <td className="py-2 px-3">{h.id}</td>
+                <td className="py-2 px-3">{h.joining_date}</td>
+                <td className="py-2 px-3">{h.status}</td>
+                <td className="py-2 px-3"> 
+                   <span
+    className={`px-3 py-1 rounded-full text-xs font-medium
+      ${h.training === "Completed" ? "bg-green-100 text-green-700" : ""}
+      ${h.training === "In Progress" ? "bg-orange-100 text-orange-700" : ""}
+      ${h.training === "Not Started" ? "bg-red-100 text-red-700" : ""}
+    `}
+  >{h.training}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+
+);
 }
 
-/* ===== INPUT COMPONENT ===== */
-function Input({ label, placeholder }: { label: string; placeholder: string }) {
-  return (
-    <div>
-      <label className="text-sm text-gray-600">{label}</label>
-      <input
-        placeholder={placeholder}
-        className="w-full mt-1 px-4 py-2 rounded-xl bg-gray-100 outline-none focus:ring-2 focus:ring-[#6f63d9]"
-      />
-    </div>
-  );
+/* INPUT */
+function Input({
+label,
+value,
+onChange,
+}: {
+label: string;
+value: string;
+onChange: (v: string) => void;
+}) {
+return ( <div> <label className="text-sm text-gray-600">{label}</label>
+<input
+value={value}
+onChange={(e) => onChange(e.target.value)}
+className="w-full mt-1 px-4 py-2 bg-gray-100 rounded-xl"
+/> </div>
+);
 }

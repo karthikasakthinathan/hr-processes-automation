@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   FiGrid,
@@ -12,6 +12,7 @@ import {
   FiLogOut,
   FiDownload,
 } from "react-icons/fi";
+import { TbMoodAngry } from "react-icons/tb";
 
 /* ===== SIDEBAR ITEM ===== */
 function MenuItem({
@@ -39,6 +40,87 @@ function MenuItem({
 }
 
 export default function PayrollPage() {
+   // --- STATES ---
+  const [payroll, setPayroll] = useState< any[]>([]);
+  const [month, setMonth] = useState("");
+  const [recentStatus, setRecentStatus] = useState< any[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
+  
+
+  // --- FETCH DATA ON LOAD ---
+  useEffect(() => {
+    loadPayrollData();
+    loadRecentStatus();
+  }, []);
+
+  const loadPayrollData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8000/payroll/records", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await res.json();
+      if (result.data) {
+        setPayroll(result.data);
+      }
+    } catch (error) {
+      console.error("API Error:", error);
+    }
+  };
+
+  const loadRecentStatus = async () => {
+  try {
+    const token = localStorage.getItem("token"); // Token yedukkurom
+    
+    // URL-a backend-la ezhudhuna "/payroll/recent-payslips" ku maathunga
+    const res = await fetch("http://localhost:8000/payroll/recent-payslips", {
+  headers: { 
+    Authorization: `Bearer ${token}` 
+  },
+});
+
+    const result = await res.json();
+    console.log("RECENT RESPONSE =", result);
+
+    if (result.data) {
+      setRecentStatus(result.data);
+    }
+  } catch (err) {
+    console.error("Error fetching status:", err);
+  }
+};
+
+
+  // --- DOWNLOAD PDF LOGIC ---
+const handleDownload = async () => {
+    if (!month) {
+      alert("Please enter a month (e.g., April 2024)");
+      return;
+    }
+    
+    setIsDownloading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://localhost:8000/payroll/download-all-payslips?month=${month}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error("File not found");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `All_Payslips_${month}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Error: Record not found in database for this month.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#EDE7F6] to-[#DCCBFA] flex items-center justify-center p-6">
 
@@ -99,102 +181,142 @@ export default function PayrollPage() {
           </div>
 
           {/* ===== SALARY SUMMARY ===== */}
-          <section className="bg-white/80 rounded-2xl shadow-md p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-sm font-semibold text-gray-600">
-                Salary Summary
-              </h2>
-              <button className="px-5 py-2 rounded-lg text-sm text-white bg-gradient-to-r from-[#7F3FBF] to-[#6F63D9] shadow">
-                View Payslip
-              </button>
-            </div>
 
-            <div className="flex items-center gap-3 mb-5">
-              <input
-                placeholder="Month Selector"
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
-              />
-              <button className="p-2 rounded-lg bg-gray-100">
-                <FiDownload />
-              </button>
-            </div>
+<section className="bg-white/80 rounded-2xl shadow-md p-6 mb-6">
+  <div className="flex justify-between items-center mb-4">
+    <div>
+    <h2 className="text-sm font-semibold text-gray-600">
+      Salary Summary
+    </h2>
+    <p className="text-xs text-gray-400 font-medium">View and download your monthly payslips</p>
+    </div>
+    
 
-            <div className="rounded-xl overflow-hidden">
-              <div className="grid grid-cols-5 bg-[#F2ECFB] text-sm text-gray-600 px-4 py-2">
-                <div>Month/Year</div>
-                <div>Gross Pay</div>
-                <div>Deductions</div>
-                <div>Joining Date</div>
-                <div>Net Pay</div>
-              </div>
+    
+          <button 
+              onClick={ handleDownload}
+              disabled={isDownloading}
+              className="px-8 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#7F3FBF] to-[#6F63D9] shadow-lg hover:shadow-purple-200 transition-all active:scale-95 disabled:opacity-50"
+             >
+              
+              {isDownloading ? "Generating..." : "Download Payslip "}
+            </button>
+          
+    </div>
+    
 
-              {[
-                ["Apr 2024", "—", "—", "25 Apr, 2024", "25 Apr, 2024"],
-                ["Apr 2024", "—", "—", "26 Apr, 2024", "17 Apr, 2024"],
-              ].map((row, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-5 px-4 py-3 text-sm text-gray-700 bg-white"
-                >
-                  {row.map((cell, j) => (
-                    <div key={j}>{cell}</div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
+  <div className="flex items-center gap-3 mb-2 px-6">
+    <input
+      value={month}
+      onChange={(e) => setMonth(e.target.value)}
+      placeholder="Type Month Name (e.g., April 2024)"
+      className="w-full max-w-3xl px-2 py-2 rounded-lg bg-gray-100 text-sm outline-none"
+    />
+    <FiDownload />
+  </div>
+
+
+
+  <div className="rounded-xl overflow-hidden">
+    {/* TABLE HEAD */}
+    <div className="grid grid-cols-5 bg-[#F2ECFB] text-sm text-gray-600 px-4 py-2">
+      <div>Month/Year</div>
+      <div>Gross Pay</div>
+      <div>Deductions</div>
+      <div>Joining Date</div>
+      <div>Net Pay</div>
+    </div>
+
+    {/* TABLE BODY */}
+    {payroll.length > 0 ? (
+      payroll.map((p: any, i: number) => (
+        <div
+          key={i}
+          className="grid grid-cols-5 px-4 py-3 text-sm text-gray-700 bg-white"
+        >
+          <div>{p.month || "-"}</div>
+          <div>₹{(p.basic_salary || 0).toLocaleString()}</div>
+          <div>₹{(p.deductions || 0).toLocaleString()}</div>
+          <div>{p.joining_date || "-"}</div>
+          <div className="font-semibold text-purple-700">
+            ₹{(p.net_salary || 0).toLocaleString()}
+          </div>
+          
+        </div>
+      ))
+    ) : (
+      <div className="p-6 text-center text-gray-400 text-sm">
+        No salary records found
+      </div>
+    )}
+  </div>
+</section>
 
           {/* ===== RECENT PAYSLIPS ===== */}
           <section className="bg-white/80 rounded-2xl shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-sm font-semibold text-gray-600">
-                Recent Payslips
-              </h2>
-              <input
-                placeholder="Search"
-                className="px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
-              />
-            </div>
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-sm font-semibold text-gray-600">
+      Recent Payslips
+    </h2>
+    
+    <input
+      placeholder="Search"
+      className="px-4 py-2 rounded-lg bg-gray-100 text-sm outline-none"
+    />
+  </div>
 
-            <div className="rounded-xl overflow-hidden">
-              <div className="grid grid-cols-4 bg-[#F2ECFB] text-sm text-gray-600 px-4 py-2">
-                <div>Name</div>
-                <div>Skills</div>
-                <div>Joining Date</div>
-                <div>Status</div>
-              </div>
+  <div className="rounded-xl overflow-hidden">
 
-              {[
-                ["Emma Davis", "UI/UX Designer", "25 Apr, 2024", "Shortlisted"],
-                ["James Wilson", "Sales Executive", "20 Apr, 2024", "Shortlisted"],
-                ["John Smith", "Software Engineer", "17 Apr, 2024", "Rejected"],
-                ["Jessica Brown", "Digital Marketer · SQL", "17 Apr, 2024", "Rejected"],
-              ].map((row, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-4 px-4 py-3 text-sm bg-white items-center"
-                >
-                  <div>{row[0]}</div>
-                  <div>{row[1]}</div>
-                  <div>{row[2]}</div>
-                  <div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        row[3] === "Shortlisted"
-                          ? "bg-green-100 text-green-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {row[3]}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+  {/* HEADER */}
+  <div className="grid grid-cols-4 bg-[#F2ECFB] text-sm text-gray-600 px-4 py-2">
+    <div>Employee ID</div>
+    <div>Month</div>
+    <div>Net Salary</div>
+    <div>Status</div>
+  </div>
 
-        </main>
+  {/* BODY */}
+  {recentStatus.length > 0 ? (
+    recentStatus.map((row: any, i: number) => (
+      <div
+        key={i}
+        className="grid grid-cols-4 px-4 py-3 text-sm bg-white items-center "
+      >
+        <div className="font-medium text-gray-800">
+          {row.employee_id || "-"}
+        </div>
+
+        <div className="text-gray-600">
+          {row.month || "-"}
+        </div>
+
+        <div className="text-purple-700 font-semibold">
+          ₹{row.net_salary ?? 0}
+        </div>
+
+        <div>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-bold ${
+              row.status === "Paid"
+                ? "bg-green-100 text-green-600"
+                : "bg-red-100 text-red-600"
+            }`}
+          >
+            {row.status || "Pending"}
+          </span>
+        </div>
       </div>
+    ))
+  ) : (
+    <div className="p-6 text-center text-gray-400 text-sm">
+      No recent payslips
+    </div>
+  )}
+
+</div>
+</section>
+</main>
+ </div>
     </div>
   );
 }

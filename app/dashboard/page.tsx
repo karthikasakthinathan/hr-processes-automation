@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode } from "react";
+import { useState, useEffect } from "react";
 import {
-  FiGrid,
   FiUsers,
   FiUserPlus,
   FiClock,
@@ -12,78 +11,86 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 
+const modules = [
+  { name: "Recruitment", icon: <FiUsers className="w-8 h-8" />, href: "/dashboard/recruitment" },
+  { name: "Onboarding", icon: <FiUserPlus className="w-8 h-8" />, href: "/dashboard/onboarding" },
+  { name: "Attendance & Leave", icon: <FiClock className="w-8 h-8" />, href: "/dashboard/attendance" },
+  { name: "Payroll", icon: <FiDollarSign className="w-8 h-8" />, href: "/dashboard/payroll" },
+  { name: "HR Tickets", icon: <FiHelpCircle className="w-8 h-8" />, href: "/dashboard/hr-tickets" },
+  { name: "Exit Management", icon: <FiLogOut className="w-8 h-8" />, href: "/dashboard/exit-management" },
+];
+
 export default function DashboardPage() {
+  const [displayedText, setDisplayedText] = useState("");
+  const fullText = "Welcome to HR Process Automation";
+
+  useEffect(() => {
+    let index = 0;
+    let current = "";
+
+    const timer = setInterval(() => {
+      if (index < fullText.length) {
+        current += fullText[index];
+        setDisplayedText(current);
+        index++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 50);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#f4f1fb] flex items-center justify-center p-6">
-      <div className="relative w-[1200px] h-[620px] rounded-2xl overflow-hidden shadow-2xl bg-white/30 backdrop-blur-xl border border-white/40 flex">
+    <div className="min-h-screen flex items-center justify-center p-6
+      bg-gradient-to-br from-[#fdfbff] via-[#f3ecff] to-[#fceefc]">
 
-        {/* SIDEBAR */}
-        <aside className="w-[260px] bg-gradient-to-b from-[#4b3fa6] to-[#6f63d9] text-white flex flex-col">
-          <div className="px-6 py-6 text-lg font-semibold">Dashboard</div>
+      {/* 💜 MAIN GRADIENT CARD */}
+      <div className="w-full max-w-5xl rounded-3xl 
+        bg-gradient-to-br from-[#7F3FBF] via-[#A764D9] to-[#F472B6]
+        shadow-[0_20px_60px_rgba(167,100,217,0.4)]
+        p-10 md:p-14 flex flex-col items-center">
 
-          <nav className="flex-1 px-4 space-y-2 text-sm">
-            <SidebarLink href="/dashboard" icon={<FiGrid />} label="Dashboard" active />
-            <SidebarLink href="/dashboard/recruitment" icon={<FiUsers />} label="Recruitment" />
-            <SidebarLink href="/dashboard/onboarding" icon={<FiUserPlus />} label="Onboarding" />
-            <SidebarLink href="/dashboard/attendance" icon={<FiClock />} label="Attendance & Leave" />
-            <SidebarLink href="/dashboard/payroll" icon={<FiDollarSign />} label="Payroll" />
-            <SidebarLink href="/dashboard/hr-tickets" icon={<FiHelpCircle />} label="HR Tickets" />
-            <SidebarLink href="/dashboard/exit-management" icon={<FiLogOut />} label="Exit Management" />
-          </nav>
+        {/* HEADER */}
+        <div className="h-24 mb-10 flex items-center justify-center text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-white">
+            {displayedText}
+            <span className="animate-pulse ml-1">|</span>
+          </h1>
+        </div>
 
-          {/* PROFILE */}
-          <div className="px-6 py-4 border-t border-white/20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center text-xs">
-              RD
-            </div>
-            <div>
-              <p className="text-sm font-medium">Rahul Dewy</p>
-              <p className="text-xs opacity-70">HR Manager</p>
-            </div>
-          </div>
-        </aside>
+        {/* ❄️ GLASS MODULE CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+          {modules.map((mod) => (
+            <Link key={mod.name} href={mod.href}>
+              <div className="group flex flex-col items-center justify-center 
+                p-8 h-52 rounded-2xl 
+                bg-white/20 backdrop-blur-lg 
+                border border-white/30 
+                shadow-lg
+                hover:bg-white/30
+                hover:-translate-y-2 hover:scale-105
+                transition-all duration-300 cursor-pointer">
 
-        {/* MAIN CONTENT */}
-        <main className="relative flex-1 overflow-hidden">
-          {/* BACKGROUND IMAGE */}
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/image.png')" }}
-          />
+                {/* ICON */}
+                <div className="w-16 h-16 rounded-full 
+                  bg-white/30 text-white
+                  flex items-center justify-center mb-5 
+                  group-hover:scale-110 transition">
+                  {mod.icon}
+                </div>
 
-          {/* GLASS OVERLAY */}
-          <div className="absolute inset-0 bg-white/20" />
+                {/* TITLE */}
+                <h2 className="text-xl font-semibold text-white text-center">
+                  {mod.name}
+                </h2>
 
-          {/* CONTENT */}
-          <div className="relative z-10 h-full flex items-center justify-center text-center px-10">
-            <h1 className="text-4xl font-semibold text-gray-900 leading-snug">
-              Welcome to the HR <br />
-              Processes Automation
-            </h1>
-          </div>
-        </main>
+              </div>
+            </Link>
+          ))}
+        </div>
+
       </div>
     </div>
-  );
-}
-
-/* SIDEBAR LINK COMPONENT */
-type SidebarLinkProps = {
-  href: string;
-  icon: ReactNode;
-  label: string;
-  active?: boolean;
-};
-
-function SidebarLink({ href, icon, label, active = false }: SidebarLinkProps) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition cursor-pointer
-        ${active ? "bg-white/25" : "hover:bg-white/15"}`}
-    >
-      <span className="text-lg">{icon}</span>
-      <span>{label}</span>
-    </Link>
   );
 }
